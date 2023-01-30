@@ -61,12 +61,12 @@ class Search(APIView):
 async def wordSearch(request, slug):
     sentence = re.sub("-", " ", slug.strip().lower())
 
-    # isEnglish = await check_language(sentence)
-    #
-    # if isEnglish:
-    #     pass
-    # else:
-    #     sentence = await translate_sentence(sentence)
+    isEnglish = await check_language(sentence)
+    
+    if isEnglish:
+         pass
+    else:
+        sentence = await translate_sentence(sentence)
 
     media_url = os.path.join(BASE_DIR, 'media')
 
