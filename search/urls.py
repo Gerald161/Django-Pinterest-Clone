@@ -3,5 +3,6 @@ from . import views
 
 urlpatterns = [
     path('', views.Search.as_view()),
-    path('<slug:slug>', views.wordSearch),
+    path('wordSearch', views.wordSearch),
+    path('translateSentence', views.translateSentence),
 ]

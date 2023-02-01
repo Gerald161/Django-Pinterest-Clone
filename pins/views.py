@@ -31,17 +31,16 @@ class Pins(APIView):
             all_responses_received.append(
                 {
                     'image': image, "slug": pin.slug,
-                    "name": pin.name
+                    "name": pin.name, "id": pin.id
                 }
             )
 
         return JsonResponse(all_responses_received, safe=False)
 
     def post(self, request, *args, **kwargs):
-        # print(request.FILES['image'])
         serializer = pin_serializer(data=request.data)
         if serializer.is_valid():
-            name = serializer.validated_data.get('name').strip()
+            name = serializer.validated_data.get('name').strip().lower()
 
             temporalSlug = name.strip().lower()
 
@@ -67,60 +66,20 @@ class Pins(APIView):
 
             faiss.write_index(index, f"{media_url}/vector.index")
 
-            # return Response({
-            #     'status': f'saved {new_product_slug}'
-            # })
+            sentence_index = faiss.read_index(f"{media_url}/sentence.index")
+
+            sentence_model = SentenceTransformer(f"{media_url}/new_sentence_model")
+
+            sentences = [name]
+
+            sentence_embeddings = sentence_model.encode(sentences)
+
+            sentence_index.add_with_ids(sentence_embeddings, [str(pin.id)])
+
+            faiss.write_index(sentence_index, f"{media_url}/sentence.index")
 
             return Response({
                 'status': f'saved'
             })
         else:
             return Response(serializer.errors)
-
-
-class TestSlug(APIView):
-    def get(self, request, *args, **kwargs):
-        slug = self.kwargs['slug']
-
-        print(request.GET.get("rank"))
-
-        print(request.GET.get("jojo"))
-
-        return Response({
-            'username': slug
-        })
-
-    def post(self, request, *args, **kwargs):
-        slug = self.kwargs['slug']
-
-        print(request.user)
-
-        print(request.data.get("username"))
-
-        print(request.data.get("rank"))
-
-        return Response({
-            'username': 'abanga kofi'
-        })
-
-
-class SendImage(APIView):
-    def post(self, request, *args, **kwargs):
-
-        print(request.FILES.get('image'))
-
-        return Response({
-            'username': 'abanga kofi'
-        })
-
-
-class SendMultipleImages(APIView):
-    def post(self, request, *args, **kwargs):
-
-        print(request.FILES.get('image1'))
-
-        print(request.FILES.get('image2'))
-
-        return Response({
-            'username': 'abanga kofi'
-        })

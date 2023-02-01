@@ -56,25 +56,29 @@ class Search(APIView):
             })
 
 
+from django.views.decorators.csrf import csrf_exempt
+
+
+@csrf_exempt
 @sync_to_async
 @async_to_sync
-async def wordSearch(request, slug):
-    sentence = re.sub("-", " ", slug.strip().lower())
+async def wordSearch(request):
+    sentence = request.POST.get("word").strip().lower()
 
     isEnglish = await check_language(sentence)
-    
+
     if isEnglish:
-         pass
+        pass
     else:
-        sentence = await translate_sentence(sentence)
+        sentence = await translate_sentence(request.POST.get("word").strip().lower())
 
     media_url = os.path.join(BASE_DIR, 'media')
 
-    index = faiss.read_index(f"{media_url}/vector.index")
+    index = faiss.read_index(f"{media_url}/sentence.index")
 
-    model = SentenceTransformer(f"{media_url}/new_clip_model")
+    model = SentenceTransformer(f"{media_url}/new_sentence_model")
 
-    k = 8
+    k = 5
 
     query_vector = model.encode([sentence])
 
@@ -96,6 +100,23 @@ async def wordSearch(request, slug):
             )
 
     return JsonResponse(all_responses_received, safe=False)
+
+
+@csrf_exempt
+@sync_to_async
+@async_to_sync
+async def translateSentence(request):
+    sentence = request.POST.get("sentence").strip().lower()
+
+    isEnglish = await check_language(sentence)
+
+    if isEnglish:
+        return JsonResponse({"sentence": sentence}, safe=False)
+    else:
+        sentence = await translate_sentence(request.POST.get("sentence").strip().lower())
+
+        return JsonResponse({"sentence": sentence}, safe=False)
+
 
 
 @sync_to_async
